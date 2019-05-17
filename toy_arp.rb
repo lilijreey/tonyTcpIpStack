@@ -82,15 +82,16 @@ def mk_arp(op, src_mac, src_ip, dst_mac, dst_ip)
   arp.to_binary_s
 end
 
-def hand_arp_request(rep)
+def hand_arp_request(req)
   # 这时的dst_mac 为全0
-  if rep.dst_ip.get == $g_ctx.stack_ip
+  if req.dst_ip.get == $g_ctx.stack_ip
     #mkdir arp rsp
-    puts "stack recv arp #{rep}"
+    #puts "stack recv arp #{req}"
+    printf "stack recv arp request src_ip:%s, src_mac:%s\n", req.src_ip.get, req.src_mac
     rsp = mk_arp(Arp::OP_TYPE_ARP_RSP, 
                  $g_ctx.stack_mac, $g_ctx.stack_ip,
-                 rep.src_mac, rep.src_ip)
-    eth = mk_ether(STACK_MAC, rep.src_mac, ETH_TYPE_ARP, rsp)
+                 req.src_mac, req.src_ip)
+    eth = mk_ether(STACK_MAC, req.src_mac, ETH_TYPE_ARP, rsp)
     $g_ctx.tap.syswrite(eth)
   end
 end

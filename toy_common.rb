@@ -7,8 +7,11 @@ TAP_MASK = '255.255.255.0'
 
 STACK_IP ='192.168.33.11'
 STACK_MAC = '4e:e8:17:02:11:03'
-$g_ctx = Struct.new(:name, :ip, :mac, :stack_ip, :stack_mac, :tap).new(TAP_NAME, TAP_IP, TAP_MAC,
-                                                                STACK_IP, STACK_MAC)
+$g_ctx = Struct.new(:name, :tap_ip, :tap_mac, :stack_ip, :stack_mac, :tap).new(TAP_NAME,
+                                                                               TAP_IP,
+                                                                               TAP_MAC, 
+                                                                               STACK_IP,
+                                                                               STACK_MAC)
 
 
 class IpAddr < BinData::Primitive

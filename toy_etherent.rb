@@ -1,6 +1,7 @@
 require 'bindata'
 
 require_relative 'toy_arp'
+require_relative 'toy_ip'
 
 
 
@@ -62,9 +63,26 @@ class EtherHead < BinData::Record
   #end
 end
 
-ETH_TYPE_IPV4 = 0x0800
-ETH_TYPE_ARP  = 0x0806
+# 0x0000 - 0x05DC 802.3 长度
 
+ETH_TYPE_IPV4 = 0x0800
+ETH_TYPE_IPV6 = 0x86DD
+ETH_TYPE_ARP  = 0x0806
+ETH_TYPE_PPP  = 0x880B
+ETH_TYPE_SNMP = 0x814C
+ETH_TYPE_VLAN = 0x9100
+
+def eth_type_2_name(type)
+  case type
+  when ETH_TYPE_IPV4 then "ipv4".freeze
+  when ETH_TYPE_IPV6 then  "ipv6".freeze
+  when ETH_TYPE_ARP  then "arp".freeze 
+  when ETH_TYPE_PPP  then "ppp".freeze 
+  when ETH_TYPE_SNMP then  "snmp".freeze
+  when ETH_TYPE_VLAN then  "vlan".freeze
+  else "unknonw eth type:#{type}"
+  end
+end
 
 
 def mk_ether(src, dst, eth_type, payload)
@@ -82,9 +100,13 @@ def l2_parser(frame)
   head = EtherHead.read(frame)
   # only handle dst-mac or src-mac is myself package
   dir = 
-  if head.dst == $g_ctx.mac
+    if head.dst == $g_ctx.stack_mac or head.dst == MAC_BROADCAST_ADDR
     :recv
-  elsif head.src = $g_ctx.mac
+  elsif head.src = $g_ctx.stack_mac
+    #TODO
+    #puts "my send pkg:#{eth_type_2_name(head.eth_type)} #{head}"
+    return 
+    #puts "WARING shoun't occus my send to #{head} "
     :send
   else
     return
@@ -93,9 +115,12 @@ def l2_parser(frame)
 
 
   #TODO 广播包也应该处理
-  if head.eth_type == ETH_TYPE_ARP
-    #puts "#{head}"
-    handle_arp(dir, head)
+  case head.eth_type
+  when ETH_TYPE_ARP then handle_arp(dir, head)
+  when ETH_TYPE_IPV4 then handle_ipv4(dir, head)
+  else
+    #puts "recv other #{eth_type_2_name(head.eth_type)}"
+    :pass
   end
 
 end
